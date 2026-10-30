@@ -16,7 +16,7 @@ struct ConfigView: View {
         NavigationView {
             Form {
                 Section(header: Text("小哈 4G 鉴权凭证")) {
-                    TextField("电池 SN 编号 (如 8909092780)", text: $deviceId)
+                    TextField("电池 SN 编号 (如 89********)", text: $deviceId)
                     TextField("用户 Token", text: $token)
                     TextField("设备 GUID", text: $guid)
                     TextField("用户 userNewId", text: $userNewId)
