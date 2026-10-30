@@ -46,21 +46,20 @@ jobs:
                    CODE_SIGNING_ALLOWED=NO \
                    CODE_SIGNING_REQUIRED=NO \
                    CODE_SIGN_IDENTITY="" \
-                   AD_HOC_CODE_SIGNING_ALLOWED=YES \
-                   SWIFT_VERSION=5.0 \
-                   2>&1 | grep -E "error:|warning:|BUILD FAILED" || true
-
-        # 检查是否成功生成 app
-        if [ ! -d "build/Build/Products/Release-iphoneos/XiaohaBatteryTracker.app" ]; then
-          echo "App build failed! Full log above."
-          exit 1
-        fi
+                   AD_HOC_CODE_SIGNING_ALLOWED=YES
 
     - name: Package into IPA
       run: |
+        APP_PATH=$(find build -name "*.app" -type d | head -n 1)
+        echo "Found APP at: $APP_PATH"
+        if [ -z "$APP_PATH" ]; then
+          echo "Error: No .app found in build directory!"
+          exit 1
+        fi
         mkdir -p Payload
-        cp -r build/Build/Products/Release-iphoneos/XiaohaBatteryTracker.app Payload/
-        zip -r XiaohaBatteryTracker.ipa Payload
+        cp -r "$APP_PATH" Payload/
+        zip -r -9 XiaohaBatteryTracker.ipa Payload
+        ls -lh XiaohaBatteryTracker.ipa
         rm -rf Payload
 
     - name: Upload IPA Artifact
