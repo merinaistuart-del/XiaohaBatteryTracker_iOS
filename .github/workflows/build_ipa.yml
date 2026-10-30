@@ -36,7 +36,7 @@ jobs:
 
     - name: Build App
       run: |
-        xcodebuild clean build \
+        xcodebuild build \
                    -project XiaohaBatteryTracker.xcodeproj \
                    -scheme XiaohaBatteryTracker \
                    -configuration Release \
@@ -46,7 +46,15 @@ jobs:
                    CODE_SIGNING_ALLOWED=NO \
                    CODE_SIGNING_REQUIRED=NO \
                    CODE_SIGN_IDENTITY="" \
-                   AD_HOC_CODE_SIGNING_ALLOWED=YES
+                   AD_HOC_CODE_SIGNING_ALLOWED=YES \
+                   SWIFT_VERSION=5.0 \
+                   2>&1 | grep -E "error:|warning:|BUILD FAILED" || true
+
+        # 检查是否成功生成 app
+        if [ ! -d "build/Build/Products/Release-iphoneos/XiaohaBatteryTracker.app" ]; then
+          echo "App build failed! Full log above."
+          exit 1
+        fi
 
     - name: Package into IPA
       run: |
