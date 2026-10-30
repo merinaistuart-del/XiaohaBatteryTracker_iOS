@@ -34,6 +34,38 @@ jobs:
         </Scheme>
         EOF
 
+    - name: Setup AppIcon & Assets
+      run: |
+        # 生成合规的 1024x1024 默认 App 图标
+        python3 -c "
+        import struct, zlib
+        def make_png(w, h, r, g, b):
+            raw = b''
+            for y in range(h):
+                raw += b'\x00' + bytes([r, g, b, 255] * w)
+            comp = zlib.compress(raw)
+            def chunk(t, d):
+                return struct.pack('>I', len(d)) + t + d + struct.pack('>I', zlib.crc32(t + d) & 0xffffffff)
+            return b'\x89PNG\r\n\x1a\n' + chunk(b'IHDR', struct.pack('>IIBBBBB', w, h, 8, 6, 0, 0, 0)) + chunk(b'IDAT', comp) + chunk(b'IEND', b'')
+        open('XiaohaBatteryTracker/Assets.xcassets/AppIcon.appiconset/icon_1024.png', 'wb').write(make_png(1024, 1024, 10, 26, 34))
+        "
+        cat << 'EOF' > XiaohaBatteryTracker/Assets.xcassets/AppIcon.appiconset/Contents.json
+        {
+          "images" : [
+            {
+              "filename" : "icon_1024.png",
+              "idiom" : "universal",
+              "platform" : "ios",
+              "size" : "1024x1024"
+            }
+          ],
+          "info" : {
+            "author" : "xcode",
+            "version" : 1
+          }
+        }
+        EOF
+
     - name: Build App
       run: |
         xcodebuild build \
