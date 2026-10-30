@@ -50,12 +50,8 @@ jobs:
 
     - name: Package into IPA
       run: |
-        APP_PATH=$(find build -name "*.app" -type d | head -n 1)
-        echo "Found APP at: $APP_PATH"
-        if [ -z "$APP_PATH" ]; then
-          echo "Error: No .app found in build directory!"
-          exit 1
-        fi
+        APP_PATH=$(find build/Build/Products -name "*.app" -type d | head -n 1)
+        echo "Found App at: $APP_PATH"
         mkdir -p Payload
         cp -r "$APP_PATH" Payload/
         zip -r -9 XiaohaBatteryTracker.ipa Payload
