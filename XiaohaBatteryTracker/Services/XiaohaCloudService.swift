@@ -52,20 +52,19 @@ class XiaohaCloudService: ObservableObject {
     
     func fetchRealtimeData(triggerWakeup: Bool = true) async {
         guard !config.token.isEmpty else {
-            DispatchQueue.main.async {
+            await MainActor.run {
                 self.syncMessage = "⚠️ 未配置小哈 Token"
             }
             return
         }
         
-        DispatchQueue.main.async {
+        await MainActor.run {
             self.isSyncing = true
             self.syncMessage = "🔄 4G云端同步中..."
         }
         
         let baseUrl = config.apiUrl.trimmingCharacters(in: .whitespacesAndNewlines).trimmingCharacters(in: CharacterSet(charactersIn: "/"))
         
-        // 1. 发送 4G 主动唤醒指令
         if triggerWakeup {
             let wakeupExtra: [String: Any] = [
                 "waitBatteryLifeCmdResultFlag": true,
@@ -75,7 +74,6 @@ class XiaohaCloudService: ObservableObject {
             _ = try? await postApi(baseUrl: baseUrl, action: "swp.li.user.battery.last", extraParams: wakeupExtra)
         }
         
-        // 2. 并发拉取 status, detail, track, mos
         async let statusResp = postApi(baseUrl: baseUrl, action: "swp.li.user.battery.status")
         async let detailResp = postApi(baseUrl: baseUrl, action: "swp.li.user.battery.detail")
         async let trackResp = postApi(baseUrl: baseUrl, action: "swp.li.user.battery.track")
@@ -88,7 +86,7 @@ class XiaohaCloudService: ObservableObject {
         
         let merged = parseAndMerge(statusJson: statusJson, detailJson: detailJson, trackJson: trackJson, mosJson: mosJson)
         
-        DispatchQueue.main.async {
+        await MainActor.run {
             self.currentSnapshot = merged
             self.saveSnapshot(merged)
             self.isSyncing = false
@@ -158,8 +156,8 @@ class XiaohaCloudService: ObservableObject {
         
         // 解析 Status
         if let sData = statusJson.data(using: .utf8),
-           let sObj = try? JSONSerialization.jsonObject(with: sData) as? [String: Any],
-           let data = (sObj["data"] as? [String: Any]) ?? sObj {
+           let sObj = try? JSONSerialization.jsonObject(with: sData) as? [String: Any] {
+            let data = (sObj["data"] as? [String: Any]) ?? sObj
             
             if let v = data["totalVoltage"] as? Double ?? data["voltage"] as? Double {
                 snap.voltage = (v > 1000.0) ? v / 1000.0 : ((v > 200.0) ? v / 10.0 : v)
@@ -187,8 +185,8 @@ class XiaohaCloudService: ObservableObject {
         
         // 解析 Detail
         if let dData = detailJson.data(using: .utf8),
-           let dObj = try? JSONSerialization.jsonObject(with: dData) as? [String: Any],
-           let data = (dObj["data"] as? [String: Any]) ?? dObj {
+           let dObj = try? JSONSerialization.jsonObject(with: dData) as? [String: Any] {
+            let data = (dObj["data"] as? [String: Any]) ?? dObj
             
             if let bType = data["batteryType"] as? String ?? data["batteryModel"] as? String {
                 snap.batteryModel = bType
@@ -224,7 +222,6 @@ class XiaohaCloudService: ObservableObject {
             let lat = loc["lat"] as? Double ?? 0.0
             let lng = loc["lng"] as? Double ?? 0.0
             
-            // 地址保真
             if !addr.isEmpty {
                 let isCoarse = addr.count <= 12 || addr.contains(" ")
                 let prevDetailed = snap.gpsAddress.count > 12 && !snap.gpsAddress.contains(" ")
