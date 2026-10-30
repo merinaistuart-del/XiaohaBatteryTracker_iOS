@@ -36,16 +36,17 @@ jobs:
 
     - name: Build App
       run: |
-        xcodebuild -project XiaohaBatteryTracker.xcodeproj \
+        xcodebuild clean build \
+                   -project XiaohaBatteryTracker.xcodeproj \
                    -scheme XiaohaBatteryTracker \
                    -configuration Release \
+                   -destination 'generic/platform=iOS' \
                    -sdk iphoneos \
                    -derivedDataPath build \
                    CODE_SIGNING_ALLOWED=NO \
                    CODE_SIGNING_REQUIRED=NO \
                    CODE_SIGN_IDENTITY="" \
-                   AD_HOC_CODE_SIGNING_ALLOWED=YES \
-                   build
+                   AD_HOC_CODE_SIGNING_ALLOWED=YES
 
     - name: Package into IPA
       run: |
