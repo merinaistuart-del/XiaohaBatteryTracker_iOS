@@ -36,7 +36,7 @@ jobs:
 
     - name: Setup AppIcon & Assets
       run: |
-        # 生成合规的 1024x1024 默认 App 图标
+        mkdir -p XiaohaBatteryTracker/Assets.xcassets/AppIcon.appiconset
         python3 -c "
         import struct, zlib
         def make_png(w, h, r, g, b):
